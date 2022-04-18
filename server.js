@@ -28,7 +28,7 @@ let doURL = process.env.DO_URL;
 let id;
 
 async function getContent(_id, _key) {
-  let contentPath = path.resolve(__dirname,'output',_id)
+  let contentPath = path.join(__dirname,'output',_id)
   try {
     console.log("> Fetching content from storage");
     const command = new GetObjectCommand({
@@ -43,7 +43,7 @@ async function getContent(_id, _key) {
 }
 
 async function getAssets(_id, _key) {
-  let assetsPath = path.resolve(__dirname,'public/assets',_id)
+  let assetsPath = path.join(__dirname,'public/assets',_id)
   try {
     console.log("> Fetching content from storage");
     const command = new GetObjectCommand({
@@ -60,6 +60,7 @@ async function getAssets(_id, _key) {
 let abiPath;
 
 app.use("/", async (req, res, next) => {
+  console.log(__dirname);
   await getContent("hidden.json", "hidden/hidden.json").then(() => {
     console.log("hidden JSON");
   });
@@ -79,7 +80,8 @@ app.get("/metadata/:id", async (req, res, next) => {
   await getContent(key, key)
     .then((result) => {
       console.log("> Fetching content from storage Success!");
-      abiPath = path.resolve(__dirname,'output/abi.json');
+      abiPath = path.join(__dirname,'output/abi.json');
+      console.log(abiPath);
     })
     .then((result) => {
       next();
@@ -127,7 +129,7 @@ app.get("/metadata/:id", async (req, res, next) => {
         }
       }).catch(error => {
         console.log(error);
-        const hiddenPath = path.resolve(__dirname,'output/hidden.json');
+        const hiddenPath = path.join(__dirname,'output/hidden.json');
         try {
           console.log("Information Hidden");
           if (fs.existsSync(hiddenPath)) {
@@ -156,7 +158,7 @@ app.get("/metadata/:id", async (req, res, next) => {
   await getContent(id, keyID);
   await getAssets(idImage, keyAssets);
   try {
-    const metadataPath = path.resolve(__dirname,'output',id);
+    const metadataPath = path.join(__dirname,'output',id);
     if (fs.existsSync(metadataPath)) {
       const metadataName = metadataPath;
       const metadata = require(metadataName);
@@ -180,7 +182,7 @@ app.get("/metadata/:id", async (req, res, next) => {
 });
 
 app.get("/metadata/:id", async (req, res) => {
-  const metadataPath = path.resolve(__dirname,'output',id);
+  const metadataPath = path.join(__dirname,'output',id);
   fs.unlinkSync(metadataPath);
 });
 
