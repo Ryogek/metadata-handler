@@ -28,6 +28,7 @@ let doURL = process.env.DO_URL;
 let id;
 
 async function getContent(_id, _key) {
+  let contentPath = path.join(__dirname,'/output/',_id)
   try {
     console.log("> Fetching content from storage");
     const command = new GetObjectCommand({
@@ -35,13 +36,14 @@ async function getContent(_id, _key) {
       Bucket: bucketName,
     });
     const s3Item = await s3Client.send(command);
-    s3Item.Body.pipe(createWriteStream(`./output/${_id}`));
+    s3Item.Body.pipe(createWriteStream(contentPath));
   } catch {
     console.log("> Error Fetching Content from storage");
   }
 }
 
 async function getAssets(_id, _key) {
+  let assetsPath = path.join(__dirname,'/public/assets/',_id)
   try {
     console.log("> Fetching content from storage");
     const command = new GetObjectCommand({
@@ -49,7 +51,7 @@ async function getAssets(_id, _key) {
       Bucket: bucketName,
     });
     const s3Item = await s3Client.send(command);
-    s3Item.Body.pipe(createWriteStream(`./public/assets/${_id}`));
+    s3Item.Body.pipe(createWriteStream(assetsPath));
   } catch {
     console.log("> Error Fetching Content from storage");
   }
@@ -77,7 +79,7 @@ app.get("/metadata/:id", async (req, res, next) => {
   await getContent(key, key)
     .then((result) => {
       console.log("> Fetching content from storage Success!");
-      abiPath = "./output/abi.json";
+      abiPath = path.join(__dirname,'/output/abi.json');
     })
     .then((result) => {
       next();
@@ -125,7 +127,7 @@ app.get("/metadata/:id", async (req, res, next) => {
         }
       }).catch(error => {
         console.log(error);
-        const hiddenPath = "./output/hidden.json";
+        const hiddenPath = path.join(__dirname,'/output/hidden.json');
         try {
           console.log("Information Hidden");
           if (fs.existsSync(hiddenPath)) {
@@ -154,7 +156,7 @@ app.get("/metadata/:id", async (req, res, next) => {
   await getContent(id, keyID);
   await getAssets(idImage, keyAssets);
   try {
-    const metadataPath = "./output/" + id;
+    const metadataPath = path.join(__dirname,'/output/',id);
     if (fs.existsSync(metadataPath)) {
       const metadataName = metadataPath;
       const metadata = require(metadataName);
@@ -178,7 +180,7 @@ app.get("/metadata/:id", async (req, res, next) => {
 });
 
 app.get("/metadata/:id", async (req, res) => {
-  const metadataPath = "./output/" + id;
+  const metadataPath = path.join(__dirname,'/output/',id);
   fs.unlinkSync(metadataPath);
 });
 
