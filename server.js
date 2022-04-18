@@ -81,7 +81,7 @@ app.get("/metadata/:id", async (req, res, next) => {
   await getContent(key, key)
     .then((result) => {
       console.log("> Fetching content from storage Success!");
-      abiPath = path.join(__dirname,'output',key);
+      abiPath = require(path.join(__dirname,'output',key));
       console.log(abiPath);
     })
     .then((result) => {
