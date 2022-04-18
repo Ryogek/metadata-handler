@@ -1,0 +1,26 @@
+{
+  "name": "safe-metadata-2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.67.0",
+    "aws-sdk": "^2.1112.0",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "forever": "^4.0.3",
+    "forever-monitor": "^3.0.3",
+    "git": "^0.1.5",
+    "pm2": "^5.2.0",
+    "stream": "^0.0.2",
+    "url-join": "^5.0.0",
+    "web3": "^1.7.3",
+    "web3-eth-contract": "^1.7.3"
+  }
+}
