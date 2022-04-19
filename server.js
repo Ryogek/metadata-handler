@@ -99,7 +99,8 @@ app.get("/metadata/:id", async (req, res, next) => {
 app.get("/metadata/:id", async (req, res, next) => {
   let key = "abi.json";
   let abiPath = path.join(__dirname,'output',key);
-  try {
+  setTimeout(async function(err, data){
+    try {
       console.log("Initialsing Smart Contract");
       const abi = require(abiPath);
       console.log(contractAddress);
@@ -109,6 +110,7 @@ app.get("/metadata/:id", async (req, res, next) => {
     console.error("Path not exist");
     console.log(err);
   }
+  },3000);
 });
 
 app.get("/metadata/:id", async (req, res, next) => {
@@ -146,7 +148,7 @@ app.get("/metadata/:id", async (req, res, next) => {
             fs.writeFileSync(
               hiddenName,
               JSON.stringify(hidden))
-              res.send(JSON.stringify(hidden));
+              res.sendFile(hiddenPath);
         } catch (err) {
           console.log(err);
         }
@@ -174,7 +176,7 @@ app.get("/metadata/:id", async (req, res, next) => {
             if (err) {
               console.log("Error in metadata handler");
             } else {
-              res.send(JSON.stringify(metadata));
+              res.sendFile(metadataPath);
               next();
             }
           }
@@ -196,7 +198,7 @@ app.get("/metadata/:id", (req, res) => {
       fs.unlinkSync(_metadatapath);}
     unlink(metadataPath);
     console.log('Cleaning Succesfull');
-  }, 5000);
+  }, 50000);
 })
 
 /*=================================
