@@ -114,7 +114,7 @@ app.get("/metadata/:id", async (req, res, next) => {
 //   }
 // });
 
-app.get("/metadata/:id", (req, res, next) => {
+app.get("/metadata/:id", async (req, res, next) => {
   try {
     await exists(abiPath).then(result => {if(result == true){
       console.log('Initialising Smart Contract');
@@ -209,7 +209,7 @@ app.get("/metadata/:id", async (req, res, next) => {
 
 app.get("/metadata/:id", async (req, res) => {
   const metadataPath = path.join(__dirname,'output',id);
-  fs.unlinkSync(metadataPath);
+  (fs.unlinkSync(metadataPath));
 });
 
 app.get("*", (req, res) => {
