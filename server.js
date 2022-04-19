@@ -58,6 +58,15 @@ async function getAssets(_id, _key) {
   }
 }
 
+async function exists (_path) {
+  try {
+    await fs.accessSync(_path)
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 let abiPath;
 
 app.use("/", async (req, res, next) => {
@@ -81,7 +90,7 @@ app.get("/metadata/:id", async (req, res, next) => {
   await getContent(key, key)
     .then((result) => {
       console.log("> Fetching content from storage Success!");
-      abiPath = require(path.join(__dirname,'output',key));
+      abiPath = path.join(__dirname,'output',key);
       console.log(abiPath);
     })
     .then((result) => {
@@ -89,21 +98,37 @@ app.get("/metadata/:id", async (req, res, next) => {
     });
 });
 
+// app.get("/metadata/:id", (req, res, next) => {
+//   try {
+//     if (fs.existsSync(abiPath)) {
+//       console.log("Initialsing Smart Contract");
+//       const abi = require(abiPath);
+//       console.log(contractAddress);
+//       web3Contract = new web3.eth.Contract(abi, contractAddress);
+//       next();
+//     } else {
+//       console.log("Unknown error has occured in Smart Contract path");
+//     }
+//   } catch (err) {
+//     console.error("Path not exist");
+//   }
+// });
+
 app.get("/metadata/:id", (req, res, next) => {
   try {
-    if (fs.existsSync(abiPath)) {
-      console.log("Initialsing Smart Contract");
+    await exists(abiPath).then(result => {if(result == true){
+      console.log('Initialising Smart Contract');
       const abi = require(abiPath);
       console.log(contractAddress);
-      web3Contract = new web3.eth.Contract(abi, contractAddress);
-      next();
-    } else {
-      console.log("Unknown error has occured in Smart Contract path");
-    }
-  } catch (err) {
-    console.error("Path not exist");
-  }
-});
+      web3Contract = new web3.eth.Contract(abi,contractAddress)
+      .then(() => {console.log('Contract Deployed'); next()})
+      .catch(error => {console.log(error); res.redirect('back')});
+    }})
+  } catch(err) {
+    console.log(err);
+    res.redirect('back');
+  };
+  });
 
 app.get("/metadata/:id", async (req, res, next) => {
   let valueCut = id.replace(".json", "");
