@@ -29,7 +29,6 @@ let id;
 
 async function getContent(_id, _key) {
   let contentPath = path.join(__dirname, "output", _id);
-  console.log(contentPath);
   try {
     console.log(`> Fetching content from storage ${_id}`);
     const command = new GetObjectCommand({
@@ -114,8 +113,8 @@ app.get("/metadata/:id", async (req, res, next) => {
     try {
       console.log("> Initialsing the Smart Contract");
       const abi = require(abiPath);
-      console.log(contractAddress);
       web3Contract = await new web3.eth.Contract(abi, contractAddress);
+      console.log("> Smart Contract Installed!");
       next();
     } catch (err) {
       console.error("> Path does not exist");
@@ -126,7 +125,6 @@ app.get("/metadata/:id", async (req, res, next) => {
 
 app.get("/metadata/:id", async (req, res, next) => {
   let valueCut = id.replace(".json", "");
-  console.log(valueCut);
   try {
     console.log("> Fetching information: ", id);
     web3Contract.methods
@@ -223,37 +221,40 @@ let idPNG;
 app.get("/assets/:id", async (req, res, next) => {
   idPNG = req.params.id;
   let key = "abi.json";
-
-  await getContent(key, key)
-    .then((result) => {
-      console.log("> Fetching content from storage Success - " + key);
-      let abiPath = path.join(__dirname, "output", key);
-      console.log(abiPath);
-    })
-    .then((result) => {
+  let abiPath = path.join(__dirname, "output", key);
+  console.log("> Checking the existence of the Abi");
+  if (fs.existsSync(abiPath)) {
+    console.log("> Abi Exists, proceeding to the next functions")
+    next();
+  } else {
+    console.log("> Abi does not Exists, Fetching Abi")
+    await getContent(key, key).then((result) => {
+      console.log("> Fetching content from storage Success: " + key);
       next();
     });
+  }
 });
 
-app.get("/assets/:id", (req, res, next) => {
+app.get("/assets/:id", async (req, res, next) => {
   let key = "abi.json";
   let abiPath = path.join(__dirname, "output", key);
-  try {
-    console.log("Initialsing Smart Contract");
-    const abi = require(abiPath);
-    console.log(contractAddress);
-    web3Contract = new web3.eth.Contract(abi, contractAddress);
-    next();
-  } catch (err) {
-    console.error("Path not exist");
-    console.log(err);
-  }
+  setTimeout(async function (err, data) {
+    try {
+      console.log("> Initialsing the Smart Contract");
+      const abi = require(abiPath);
+      web3Contract = await new web3.eth.Contract(abi, contractAddress);
+      console.log("> Smart Contract Installed!");
+      next();
+    } catch (err) {
+      console.error("> Path does not exist");
+      console.log(err);
+    }
+  }, 1000);
 });
 
 app.get("/assets/:id", async (req, res, next) => {
   let valueCut = idPNG.replace(".png", "");
   let idMetadata = idPNG.replace(".png", ".json");
-  console.log(valueCut);
   try {
     console.log("Fetching information");
     web3Contract.methods
@@ -305,7 +306,7 @@ app.get("/assets/:id", async (req, res, next) => {
         };
         sendFile(PNGPath);
         console.log("Sending Success!");
-      }, 8000);
+      }, 3000);
     })
     .then(() => {
       next();
