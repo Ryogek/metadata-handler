@@ -58,27 +58,27 @@ async function getAssets(_id, _key) {
 }
 
 app.use("/", async (req, res, next) => {
-    console.log("> Aterraverse Metadata has recognised your request");
+  console.log("> Aterraverse Metadata has recognised your request");
   console.log("> Commencing hidden existence check");
-  const hiddenJSONPath = path.join(__dirname,"output/hidden.json");
-  if(fs.existsSync(hiddenJSONPath)){
+  const hiddenJSONPath = path.join(__dirname, "output/hidden.json");
+  if (fs.existsSync(hiddenJSONPath)) {
     console.log("> Hidden Metadata exist, proceeding to the next task");
     next();
   } else {
     await getContent("hidden.json", "hidden/hidden.json").then(() => {
-            console.log("> Fetching hidden metadata Success!");
+      console.log("> Fetching hidden metadata Success!");
       next();
     });
-  };
+  }
 });
 
 app.use("/", async (req, res, next) => {
-  const hiddenPNGPath = path.join(__dirname,"public/assets/hidden.png");
-  if(fs.existsSync(hiddenPNGPath)){
+  const hiddenPNGPath = path.join(__dirname, "public/assets/hidden.png");
+  if (fs.existsSync(hiddenPNGPath)) {
     console.log("> Hidden Assets exist, proceeding to the next task");
     next();
   } else {
-    console.log("> Fetching hidden assets Success!")
+    console.log("> Fetching hidden assets Success!");
     await getAssets("hidden.png", "hidden/hidden.png").then(() => {
       console.log("> Fetching hidden assets Success!");
     });
@@ -95,10 +95,10 @@ app.get("/metadata/:id", async (req, res, next) => {
   let abiPath = path.join(__dirname, "output", key);
   console.log("> Checking the existence of the Abi");
   if (fs.existsSync(abiPath)) {
-    console.log("> Abi Exists, proceeding to the next functions")
+    console.log("> Abi Exists, proceeding to the next functions");
     next();
   } else {
-    console.log("> Abi does not Exists, Fetching Abi")
+    console.log("> Abi does not Exists, Fetching Abi");
     await getContent(key, key).then((result) => {
       console.log("> Fetching content from storage Success: " + key);
       next();
@@ -170,7 +170,9 @@ app.get("/metadata/:id", async (req, res, next) => {
 app.get("/metadata/:id", async (req, res, next) => {
   let keyID = `metadata/${id}`;
   let idImage = id.replace(".json", ".png");
+  let keyImage = `assets/${idImage}`;
   await getContent(id, keyID);
+  await getAssets(idImage, keyImage);
   setTimeout(function (err, data) {
     try {
       console.log("> Fetching the Metadata: ", id);
@@ -187,7 +189,7 @@ app.get("/metadata/:id", async (req, res, next) => {
           } else {
             res.sendFile(metadataPath);
             console.log("> Sending Metadata Success: ", id);
-            // next();
+            next();
           }
         }
       );
@@ -197,20 +199,34 @@ app.get("/metadata/:id", async (req, res, next) => {
   }, 1000);
 });
 
-// app.get("/metadata/:id", (req, res) => {
-//   setTimeout(function (err, data) {
-//     if (err) {
-//       return console.log(err);
-//     }
-//     const metadataPath = path.join(__dirname, "output", id);
-//     console.log("> Metadata Cleaning in Progress: ", id);
-//     const unlink = (_metadatapath) => {
-//       fs.unlinkSync(_metadatapath);
-//     };
-//     unlink(metadataPath);
-//     console.log("> Metadata Cleaning Succesfull: ", id);
-//   }, 50000);
-// });
+app.get("/metadata/:id", (req, res) => {
+  setTimeout(function (err, data) {
+    if (err) {
+      return console.log(err);
+    }
+    const metadataPath = path.join(__dirname, "output", id);
+    console.log("> Metadata Cleaning in Progress: ", id);
+    const unlink = (_metadatapath) => {
+      fs.unlinkSync(_metadatapath);
+    };
+    unlink(metadataPath);
+    console.log("> Metadata Cleaning Succesfull: ", id);
+  }, 50000);
+  
+  setTimeout(function (err, data) {
+    if (err) {
+      return console.log(err);
+    }
+    let idImage = id.replace(".json", ".png");
+    const PNGPath = path.join(__dirname, "public/assets", idImage);
+    console.log("Cleaning in Progress: ",idImage);
+    const unlink = (_pngPath) => {
+      fs.unlinkSync(_pngPath);
+    };
+    unlink(PNGPath);
+    console.log("Cleaning Succesfull: ",idImage);
+  }, 80000);
+});
 
 /*=================================
             Assets
@@ -220,36 +236,63 @@ let idPNG;
 
 app.get("/assets/:id", async (req, res, next) => {
   idPNG = req.params.id;
-  let key = "abi.json";
-  let abiPath = path.join(__dirname, "output", key);
-  console.log("> Checking the existence of the Abi");
-  if (fs.existsSync(abiPath)) {
-    console.log("> Abi Exists, proceeding to the next functions")
+  pngPath = path.join(__dirname, "public/assets", idPNG);
+  if (fs.existsSync) {
+    console.log("> Requested file exists! Fetching the file.");
+    res.sendFile(pngPath);
+    console.log("> Sending files successful!");
     next();
   } else {
-    console.log("> Abi does not Exists, Fetching Abi")
-    await getContent(key, key).then((result) => {
-      console.log("> Fetching content from storage Success: " + key);
+    let key = "abi.json";
+    let abiPath = path.join(__dirname, "output", key);
+    console.log("> Checking the existence of the Abi");
+    if (fs.existsSync(abiPath)) {
+      console.log("> Abi Exists, proceeding to the next functions");
       next();
-    });
+    } else {
+      console.log("> Abi does not Exists, Fetching Abi");
+      await getContent(key, key).then((result) => {
+        console.log("> Fetching content from storage Success: " + key);
+        next();
+      });
+    }
   }
 });
 
 app.get("/assets/:id", async (req, res, next) => {
   let key = "abi.json";
   let abiPath = path.join(__dirname, "output", key);
-  setTimeout(async function (err, data) {
-    try {
-      console.log("> Initialsing the Smart Contract");
-      const abi = require(abiPath);
-      web3Contract = await new web3.eth.Contract(abi, contractAddress);
-      console.log("> Smart Contract Installed!");
-      next();
-    } catch (err) {
-      console.error("> Path does not exist");
-      console.log(err);
-    }
-  }, 1000);
+  idPNG = req.params.id;
+  pngPath = path.join(__dirname, "public/assets", idPNG);
+  if (fs.existsSync()) {
+    console.log("> Commencing the cleaning bot: ",idPNG)
+    setTimeout(function (err, data) {
+      if (err) {
+        return console.log(err);
+      }
+      const PNGPath = path.join(__dirname, "public/assets", idPNG);
+      console.log("Cleaning in Progress");
+      const unlink = (_pngPath) => {
+        fs.unlinkSync(_pngPath);
+        console.log("> Cleaning bot has returned to its station: ",idPNG);
+      };
+      unlink(PNGPath);
+      console.log("Cleaning Succesfull");
+    }, 80000);
+  } else {
+    setTimeout(async function (err, data) {
+      try {
+        console.log("> Initialsing the Smart Contract");
+        const abi = require(abiPath);
+        web3Contract = await new web3.eth.Contract(abi, contractAddress);
+        console.log("> Smart Contract Installed!");
+        next();
+      } catch (err) {
+        console.error("> Path does not exist");
+        console.log(err);
+      }
+    }, 1000);
+  }
 });
 
 app.get("/assets/:id", async (req, res, next) => {
@@ -308,34 +351,34 @@ app.get("/assets/:id", async (req, res, next) => {
         console.log("Sending Success!");
       }, 5000);
     })
-    // .then(() => {
-    //   next();
-    // });
+    .then(() => {
+      next();
+    });
 });
 
-// app.get("/assets/:id", (req, res) => {
-//   idPNG = req.params.id;
-//   setTimeout(function (err, data) {
-//     if (err) {
-//       return console.log(err);
-//     }
-//     const PNGPath = path.join(__dirname, "public/assets", idPNG);
-//     console.log("Cleaning in Progress");
-//     const unlink = (_pngPath) => {
-//       fs.unlinkSync(_pngPath);
-//     };
-//     unlink(PNGPath);
-//     console.log("Cleaning Succesfull");
-//   }, 50000);
-// });
+app.get("/assets/:id", (req, res) => {
+  idPNG = req.params.id;
+  setTimeout(function (err, data) {
+    if (err) {
+      return console.log(err);
+    }
+    const PNGPath = path.join(__dirname, "public/assets", idPNG);
+    console.log("Cleaning in Progress: ",idPNG);
+    const unlink = (_pngPath) => {
+      fs.unlinkSync(_pngPath);
+    };
+    unlink(PNGPath);
+    console.log("Cleaning Succesfull: ",idPNG);
+  }, 80000);
+});
 
-// app.get("*", (req, res) => {
-//   res
-//     .status(404)
-//     .send(
-//       `<html><h2>"Sorry the file does not exist or it is not minted yet"</h2><p>"Please click the link below to visit our website for more information"</p><a href=${collectionWebsite}>Aterraverse Website</a></html>`
-//     );
-// });
+app.get("*", (req, res) => {
+  res
+    .status(404)
+    .send(
+      `<html><h2>"Sorry the file does not exist or it is not minted yet"</h2><p>"Please click the link below to visit our website for more information"</p><a href=${collectionWebsite}>Aterraverse Website</a></html>`
+    );
+});
 
 const port = process.env.PORT || 80;
 app.listen(port);
