@@ -281,7 +281,7 @@ app.get("/assets/:id", async (req, res, next) => {
         const hiddenPathPNG = path.join(__dirname, "public/assets/hidden.png");
         try {
           console.log("Information Hidden");
-          res.redirect(hiddenPathPNG);
+          res.sendFile(hiddenPathPNG);
         } catch (err) {
           console.log(err);
         }
@@ -306,7 +306,7 @@ app.get("/assets/:id", async (req, res, next) => {
         };
         sendFile(PNGPath);
         console.log("Sending Success!");
-      }, 3000);
+      }, 6000);
     })
     .then(() => {
       next();
