@@ -28,7 +28,7 @@ let doURL = process.env.DO_URL;
 let id;
 
 async function getContent(_id, _key) {
-  let contentPath = path.join(__dirname,'output',_id)
+  let contentPath = path.join(__dirname, "output", _id);
   console.log(contentPath);
   try {
     console.log(`> Fetching content from storage ${_id}`);
@@ -44,7 +44,7 @@ async function getContent(_id, _key) {
 }
 
 async function getAssets(_id, _key) {
-  let assetsPath = path.join(__dirname,'public/assets',_id)
+  let assetsPath = path.join(__dirname, "public/assets", _id);
   try {
     console.log(`> Fetching content from storage ${_id}`);
     const command = new GetObjectCommand({
@@ -58,24 +58,33 @@ async function getAssets(_id, _key) {
   }
 }
 
-async function exists (_path) {
-  try {
-    await fs.accessSync(_path)
-    return true;
-  } catch {
-    return false;
-  }
-}
+app.use("/", async (req, res, next) => {
+    console.log("> Aterraverse Metadata has recognised your request");
+  console.log("> Commencing hidden existence check");
+  const hiddenJSONPath = path.join(__dirname,"output/hidden.json");
+  if(fs.existsSync(hiddenJSONPath)){
+    console.log("> Hidden Metadata exist, proceeding to the next task");
+    next();
+  } else {
+    await getContent("hidden.json", "hidden/hidden.json").then(() => {
+            console.log("> Fetching hidden metadata Success!");
+      next();
+    });
+  };
+});
 
 app.use("/", async (req, res, next) => {
-  console.log(__dirname);
-  await getContent("hidden.json", "hidden/hidden.json").then(() => {
-    console.log("hidden JSON");
-  });
-  await getAssets("hidden.png", "hidden/hidden.png").then(() => {
-    console.log("hidden png");
-  });
-  next();
+  const hiddenPNGPath = path.join(__dirname,"public/assets/hidden.png");
+  if(fs.existsSync(hiddenPNGPath)){
+    console.log("> Hidden Assets exist, proceeding to the next task");
+    next();
+  } else {
+    console.log("> Fetching hidden assets Success!")
+    await getAssets("hidden.png", "hidden/hidden.png").then(() => {
+      console.log("> Fetching hidden assets Success!");
+    });
+    next();
+  }
 });
 
 /*=================================
@@ -84,77 +93,79 @@ app.use("/", async (req, res, next) => {
 app.get("/metadata/:id", async (req, res, next) => {
   id = req.params.id;
   let key = "abi.json";
-
-  await getContent(key, key)
-    .then((result) => {
-      console.log("> Fetching content from storage Success! "+key);
-      let abiPath = path.join(__dirname,'output',key);
-      console.log(abiPath);
-    })
-    .then((result) => {
+  let abiPath = path.join(__dirname, "output", key);
+  console.log("> Checking the existence of the Abi");
+  if (fs.existsSync(abiPath)) {
+    console.log("> Abi Exists, proceeding to the next functions")
+    next();
+  } else {
+    console.log("> Abi does not Exists, Fetching Abi")
+    await getContent(key, key).then((result) => {
+      console.log("> Fetching content from storage Success: " + key);
       next();
     });
+  }
 });
 
 app.get("/metadata/:id", async (req, res, next) => {
   let key = "abi.json";
-  let abiPath = path.join(__dirname,'output',key);
-  setTimeout(async function(err, data){
+  let abiPath = path.join(__dirname, "output", key);
+  setTimeout(async function (err, data) {
     try {
-      console.log("Initialsing Smart Contract");
+      console.log("> Initialsing the Smart Contract");
       const abi = require(abiPath);
       console.log(contractAddress);
       web3Contract = await new web3.eth.Contract(abi, contractAddress);
       next();
-  } catch (err) {
-    console.error("Path not exist");
-    console.log(err);
-  }
-  },3000);
+    } catch (err) {
+      console.error("> Path does not exist");
+      console.log(err);
+    }
+  }, 1000);
 });
 
 app.get("/metadata/:id", async (req, res, next) => {
   let valueCut = id.replace(".json", "");
   console.log(valueCut);
   try {
-    console.log("Fetching information");
+    console.log("> Fetching information: ", id);
     web3Contract.methods
       .tokenURI(valueCut)
       .call((err, result) => {
         if (result) {
-          console.log(result);
-          console.log("Fetching information success!");
+          console.log("> Fetching information success: ", id);
         } else {
-          console.log('error')
+          console.log(
+            "> An error has occured while Fetching the Information: ",
+            err
+          );
         }
       })
       .then((result) => {
         if (result == doURL + "metadata/" + id) {
-          console.log(result);
           next();
         } else {
-          console.log("Token URI does not match");
-          res.send("Token URI does not match");
+          console.log("> Information does not match");
+          res.send("Information does not match");
         }
-      }).catch(error => {
+      })
+      .catch((error) => {
         console.log(error);
-        const hiddenPath = path.join(__dirname,'output/hidden.json');
+        const hiddenPath = path.join(__dirname, "output/hidden.json");
         try {
-          console.log("Information Hidden");
-            console.log('consolidating');
-            const hiddenName = hiddenPath;
-            const hidden = require(hiddenPath);
-            hidden.image = doURL + "assets/hidden.png";
-            fs.writeFileSync(
-              hiddenName,
-              JSON.stringify(hidden))
-              res.sendFile(hiddenPath);
+          console.log("> INFO: Information requested is Hidden");
+          console.log("> Consolidating Hidden Information");
+          const hiddenName = hiddenPath;
+          const hidden = require(hiddenPath);
+          hidden.image = doURL + "assets/hidden.png";
+          fs.writeFileSync(hiddenName, JSON.stringify(hidden));
+          res.sendFile(hiddenPath);
         } catch (err) {
           console.log(err);
         }
       });
   } catch (err) {
-    res.send("Hidden");
+    res.send("> An unknown error has occured in Hidden Request");
   }
 });
 
@@ -162,44 +173,46 @@ app.get("/metadata/:id", async (req, res, next) => {
   let keyID = `metadata/${id}`;
   let idImage = id.replace(".json", ".png");
   await getContent(id, keyID);
-  setTimeout(function(err, data){
+  setTimeout(function (err, data) {
     try {
-      console.log('Fetching the Metadata');
-      const metadataPath = path.join(__dirname,'output',id);
-        const metadataName = metadataPath;
-        const metadata = require(metadataName);
-        metadata.image = doURL + "assets/" + idImage;
-        fs.writeFile(
-          metadataName,
-          JSON.stringify(metadata),
-          function writeJSON(err) {
-            if (err) {
-              console.log("Error in metadata handler");
-            } else {
-              res.sendFile(metadataPath);
-              next();
-            }
+      console.log("> Fetching the Metadata: ", id);
+      const metadataPath = path.join(__dirname, "output", id);
+      const metadataName = metadataPath;
+      const metadata = require(metadataName);
+      metadata.image = doURL + "assets/" + idImage;
+      fs.writeFile(
+        metadataName,
+        JSON.stringify(metadata),
+        function writeJSON(err) {
+          if (err) {
+            console.log("> Error while Fetching the Metadata: ", id);
+          } else {
+            res.sendFile(metadataPath);
+            console.log("> Sending Metadata Success: ", id);
+            next();
           }
-        );
-    } catch {
-      console.log("error");
+        }
+      );
+    } catch (err) {
+      console.log("> An Unknown Error has occured: ", err);
     }
-  }, 3000);
+  }, 1000);
 });
 
 app.get("/metadata/:id", (req, res) => {
-  setTimeout(function(err, data){
-    if(err){
+  setTimeout(function (err, data) {
+    if (err) {
       return console.log(err);
     }
-    const metadataPath = path.join(__dirname,'output',id);
-    console.log('Cleaning in Progress');
+    const metadataPath = path.join(__dirname, "output", id);
+    console.log("> Metadata Cleaning in Progress: ", id);
     const unlink = (_metadatapath) => {
-      fs.unlinkSync(_metadatapath);}
+      fs.unlinkSync(_metadatapath);
+    };
     unlink(metadataPath);
-    console.log('Cleaning Succesfull');
+    console.log("> Metadata Cleaning Succesfull: ", id);
   }, 50000);
-})
+});
 
 /*=================================
             Assets
@@ -213,8 +226,8 @@ app.get("/assets/:id", async (req, res, next) => {
 
   await getContent(key, key)
     .then((result) => {
-      console.log("> Fetching content from storage Success - "+key);
-      let abiPath = path.join(__dirname,'output',key);
+      console.log("> Fetching content from storage Success - " + key);
+      let abiPath = path.join(__dirname, "output", key);
       console.log(abiPath);
     })
     .then((result) => {
@@ -224,13 +237,13 @@ app.get("/assets/:id", async (req, res, next) => {
 
 app.get("/assets/:id", (req, res, next) => {
   let key = "abi.json";
-  let abiPath = path.join(__dirname,'output',key);
+  let abiPath = path.join(__dirname, "output", key);
   try {
-      console.log("Initialsing Smart Contract");
-      const abi = require(abiPath);
-      console.log(contractAddress);
-      web3Contract = new web3.eth.Contract(abi, contractAddress);
-      next();
+    console.log("Initialsing Smart Contract");
+    const abi = require(abiPath);
+    console.log(contractAddress);
+    web3Contract = new web3.eth.Contract(abi, contractAddress);
+    next();
   } catch (err) {
     console.error("Path not exist");
     console.log(err);
@@ -239,7 +252,7 @@ app.get("/assets/:id", (req, res, next) => {
 
 app.get("/assets/:id", async (req, res, next) => {
   let valueCut = idPNG.replace(".png", "");
-  let idMetadata = idPNG.replace(".png", ".json")
+  let idMetadata = idPNG.replace(".png", ".json");
   console.log(valueCut);
   try {
     console.log("Fetching information");
@@ -250,7 +263,7 @@ app.get("/assets/:id", async (req, res, next) => {
           console.log(result);
           console.log("Fetching information success!");
         } else {
-          console.log('error')
+          console.log("error");
         }
       })
       .then((result) => {
@@ -261,12 +274,13 @@ app.get("/assets/:id", async (req, res, next) => {
           console.log("Token URI does not match");
           res.send("Token URI does not match");
         }
-      }).catch(error => {
+      })
+      .catch((error) => {
         console.log(error);
-        const hiddenPathPNG = path.join(__dirname,'public/assets/hidden.png');
+        const hiddenPathPNG = path.join(__dirname, "public/assets/hidden.png");
         try {
           console.log("Information Hidden");
-          res.redirect(hiddenPathPNG)
+          res.redirect(hiddenPathPNG);
         } catch (err) {
           console.log(err);
         }
@@ -276,42 +290,50 @@ app.get("/assets/:id", async (req, res, next) => {
   }
 });
 
-app.get("/assets/:id", async (req, res, next)=>{
+app.get("/assets/:id", async (req, res, next) => {
   let keyAssets = `assets/${idPNG}`;
-  await getAssets(idPNG, keyAssets).then(() => {
-    setTimeout(function(err, data){
-      if(err){
-        return console.log(err);
-      }
-      const PNGPath = path.join(__dirname,'public/assets',idPNG);
-      console.log('Sending Files');
-      const sendFile = (_pngPath) => {
-        res.sendFile(_pngPath);
-      }
-      sendFile(PNGPath);
-      console.log('Sending Success!')
-    }, 8000)
-  })
-  .then(() => {next()});
-})
+  await getAssets(idPNG, keyAssets)
+    .then(() => {
+      setTimeout(function (err, data) {
+        if (err) {
+          return console.log(err);
+        }
+        const PNGPath = path.join(__dirname, "public/assets", idPNG);
+        console.log("Sending Files");
+        const sendFile = (_pngPath) => {
+          res.sendFile(_pngPath);
+        };
+        sendFile(PNGPath);
+        console.log("Sending Success!");
+      }, 8000);
+    })
+    .then(() => {
+      next();
+    });
+});
 
 app.get("/assets/:id", (req, res) => {
   idPNG = req.params.id;
-  setTimeout(function(err, data){
-    if(err){
+  setTimeout(function (err, data) {
+    if (err) {
       return console.log(err);
     }
-    const PNGPath = path.join(__dirname,'public/assets',idPNG);
-    console.log('Cleaning in Progress');
+    const PNGPath = path.join(__dirname, "public/assets", idPNG);
+    console.log("Cleaning in Progress");
     const unlink = (_pngPath) => {
-      fs.unlinkSync(_pngPath);}
+      fs.unlinkSync(_pngPath);
+    };
     unlink(PNGPath);
-    console.log('Cleaning Succesfull');
+    console.log("Cleaning Succesfull");
   }, 50000);
-})
+});
 
 app.get("*", (req, res) => {
-  res.status(404).send(`<html><h2>"Sorry the file does not exist or it is not minted yet"</h2><p>"Please click the link below to visit our website for more information"</p><a href=${collectionWebsite}>Aterraverse Website</a></html>`)
+  res
+    .status(404)
+    .send(
+      `<html><h2>"Sorry the file does not exist or it is not minted yet"</h2><p>"Please click the link below to visit our website for more information"</p><a href=${collectionWebsite}>Aterraverse Website</a></html>`
+    );
 });
 
 const port = process.env.PORT || 80;
