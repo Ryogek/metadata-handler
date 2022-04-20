@@ -200,32 +200,40 @@ app.get("/metadata/:id", async (req, res, next) => {
 });
 
 app.get("/metadata/:id", (req, res) => {
-  setTimeout(function (err, data) {
-    if (err) {
-      return console.log(err);
-    }
-    const metadataPath = path.join(__dirname, "output", id);
-    console.log("> Metadata Cleaning in Progress: ", id);
-    const unlink = (_metadatapath) => {
-      fs.unlinkSync(_metadatapath);
-    };
-    unlink(metadataPath);
-    console.log("> Metadata Cleaning Succesfull: ", id);
-  }, 50000);
-  
-  setTimeout(function (err, data) {
-    if (err) {
-      return console.log(err);
-    }
-    let idImage = id.replace(".json", ".png");
-    const PNGPath = path.join(__dirname, "public/assets", idImage);
-    console.log("Cleaning in Progress: ",idImage);
-    const unlink = (_pngPath) => {
-      fs.unlinkSync(_pngPath);
-    };
-    unlink(PNGPath);
-    console.log("Cleaning Succesfull: ",idImage);
-  }, 80000);
+  const idClean = req.params.id;
+  const metadataPath = path.join(__dirname, "output", idClean);
+  if(fs.existsSync(metadataPath)){
+    setTimeout(function (err, data) {
+      if (err) {
+        return console.log(err);
+      }
+      console.log("> Metadata Cleaning in Progress: ", idClean);
+      const unlink = (_metadatapath) => {
+        fs.unlinkSync(_metadatapath);
+      };
+      unlink(metadataPath);
+      console.log("> Metadata Cleaning Succesfull: ", idClean);
+    }, 50000);
+  } else {
+    console.log("> Metadata not found?! - ",idClean);
+  };
+  let idImage = idClean.replace(".json", ".png");
+  const PNGPath = path.join(__dirname, "public/assets", idImage);
+  if(fs.existsSync(PNGPath)){
+    setTimeout(function (err, data) {
+      if (err) {
+        return console.log(err);
+      }
+      console.log("Cleaning in Progress: ",idImage);
+      const unlink = (_pngPath) => {
+        fs.unlinkSync(_pngPath);
+      };
+      unlink(PNGPath);
+      console.log("Cleaning Succesfull: ",idImage);
+    }, 80000);
+  } else {
+    console.log("> Assets not found?! - ",idImage);
+  };
 });
 
 /*=================================
@@ -357,18 +365,18 @@ app.get("/assets/:id", async (req, res, next) => {
 });
 
 app.get("/assets/:id", (req, res) => {
-  idPNG = req.params.id;
+  const idPNGClean = req.params.id;
   setTimeout(function (err, data) {
     if (err) {
       return console.log(err);
     }
-    const PNGPath = path.join(__dirname, "public/assets", idPNG);
-    console.log("Cleaning in Progress: ",idPNG);
+    const PNGPath = path.join(__dirname, "public/assets", idPNGClean);
+    console.log("Cleaning in Progress: ",idPNGClean);
     const unlink = (_pngPath) => {
       fs.unlinkSync(_pngPath);
     };
     unlink(PNGPath);
-    console.log("Cleaning Succesfull: ",idPNG);
+    console.log("Cleaning Succesfull: ",idPNGClean);
   }, 80000);
 });
 
