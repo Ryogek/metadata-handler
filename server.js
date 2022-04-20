@@ -187,7 +187,7 @@ app.get("/metadata/:id", async (req, res, next) => {
           } else {
             res.sendFile(metadataPath);
             console.log("> Sending Metadata Success: ", id);
-            next();
+            // next();
           }
         }
       );
@@ -197,20 +197,20 @@ app.get("/metadata/:id", async (req, res, next) => {
   }, 1000);
 });
 
-app.get("/metadata/:id", (req, res) => {
-  setTimeout(function (err, data) {
-    if (err) {
-      return console.log(err);
-    }
-    const metadataPath = path.join(__dirname, "output", id);
-    console.log("> Metadata Cleaning in Progress: ", id);
-    const unlink = (_metadatapath) => {
-      fs.unlinkSync(_metadatapath);
-    };
-    unlink(metadataPath);
-    console.log("> Metadata Cleaning Succesfull: ", id);
-  }, 50000);
-});
+// app.get("/metadata/:id", (req, res) => {
+//   setTimeout(function (err, data) {
+//     if (err) {
+//       return console.log(err);
+//     }
+//     const metadataPath = path.join(__dirname, "output", id);
+//     console.log("> Metadata Cleaning in Progress: ", id);
+//     const unlink = (_metadatapath) => {
+//       fs.unlinkSync(_metadatapath);
+//     };
+//     unlink(metadataPath);
+//     console.log("> Metadata Cleaning Succesfull: ", id);
+//   }, 50000);
+// });
 
 /*=================================
             Assets
@@ -306,36 +306,36 @@ app.get("/assets/:id", async (req, res, next) => {
         };
         sendFile(PNGPath);
         console.log("Sending Success!");
-      }, 6000);
+      }, 5000);
     })
-    .then(() => {
-      next();
-    });
+    // .then(() => {
+    //   next();
+    // });
 });
 
-app.get("/assets/:id", (req, res) => {
-  idPNG = req.params.id;
-  setTimeout(function (err, data) {
-    if (err) {
-      return console.log(err);
-    }
-    const PNGPath = path.join(__dirname, "public/assets", idPNG);
-    console.log("Cleaning in Progress");
-    const unlink = (_pngPath) => {
-      fs.unlinkSync(_pngPath);
-    };
-    unlink(PNGPath);
-    console.log("Cleaning Succesfull");
-  }, 50000);
-});
+// app.get("/assets/:id", (req, res) => {
+//   idPNG = req.params.id;
+//   setTimeout(function (err, data) {
+//     if (err) {
+//       return console.log(err);
+//     }
+//     const PNGPath = path.join(__dirname, "public/assets", idPNG);
+//     console.log("Cleaning in Progress");
+//     const unlink = (_pngPath) => {
+//       fs.unlinkSync(_pngPath);
+//     };
+//     unlink(PNGPath);
+//     console.log("Cleaning Succesfull");
+//   }, 50000);
+// });
 
-app.get("*", (req, res) => {
-  res
-    .status(404)
-    .send(
-      `<html><h2>"Sorry the file does not exist or it is not minted yet"</h2><p>"Please click the link below to visit our website for more information"</p><a href=${collectionWebsite}>Aterraverse Website</a></html>`
-    );
-});
+// app.get("*", (req, res) => {
+//   res
+//     .status(404)
+//     .send(
+//       `<html><h2>"Sorry the file does not exist or it is not minted yet"</h2><p>"Please click the link below to visit our website for more information"</p><a href=${collectionWebsite}>Aterraverse Website</a></html>`
+//     );
+// });
 
 const port = process.env.PORT || 80;
 app.listen(port);
